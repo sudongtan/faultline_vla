@@ -1,0 +1,18 @@
+# Private repo and agent files
+/private/
+/CLAUDE.md
+/CLAUDE.local.md
+/.claude/
+
+# Data and generated artifacts
+/data/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.ruff_cache/
+.pytest_cache/
+
+# macOS
+.DS_Store
