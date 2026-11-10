@@ -1,0 +1,34 @@
+{
+  "tasks": 10,
+  "episodes": 2,
+  "action_steps": 10,
+  "conditions": [
+    [
+      "clean",
+      0.0
+    ],
+    [
+      "sensor_noise",
+      1.0
+    ],
+    [
+      "camera_pose",
+      1.0
+    ],
+    [
+      "camera_fov",
+      1.0
+    ],
+    [
+      "distractors",
+      1.0
+    ],
+    [
+      "light_bright",
+      1.0
+    ]
+  ],
+  "max_steps": 280,
+  "env_seed": 3000,
+  "noise_seed": 4000
+}

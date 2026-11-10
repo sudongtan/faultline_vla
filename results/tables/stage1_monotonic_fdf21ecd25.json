@@ -1,0 +1,110 @@
+[
+  {
+    "suite": "libero_object",
+    "axis": "camera_fov",
+    "monotone": true,
+    "worst_drop": -0.04120933910210928
+  },
+  {
+    "suite": "libero_object",
+    "axis": "camera_pose",
+    "monotone": true,
+    "worst_drop": -0.04138421813646964
+  },
+  {
+    "suite": "libero_object",
+    "axis": "distractors",
+    "monotone": true,
+    "worst_drop": -0.017879951341698577
+  },
+  {
+    "suite": "libero_object",
+    "axis": "light_bright",
+    "monotone": true,
+    "worst_drop": -0.005555469309911132
+  },
+  {
+    "suite": "libero_object",
+    "axis": "light_color",
+    "monotone": true,
+    "worst_drop": -0.04404467729230721
+  },
+  {
+    "suite": "libero_object",
+    "axis": "light_dim",
+    "monotone": true,
+    "worst_drop": -0.021051559659341974
+  },
+  {
+    "suite": "libero_object",
+    "axis": "light_direction",
+    "monotone": true,
+    "worst_drop": -0.032630404209097214
+  },
+  {
+    "suite": "libero_object",
+    "axis": "sensor_noise",
+    "monotone": true,
+    "worst_drop": -0.1669193327426911
+  },
+  {
+    "suite": "libero_object",
+    "axis": "texture",
+    "monotone": true,
+    "worst_drop": -0.06639431913693739
+  },
+  {
+    "suite": "libero_spatial",
+    "axis": "camera_fov",
+    "monotone": true,
+    "worst_drop": -0.05887890160083775
+  },
+  {
+    "suite": "libero_spatial",
+    "axis": "camera_pose",
+    "monotone": true,
+    "worst_drop": -0.05631209015846256
+  },
+  {
+    "suite": "libero_spatial",
+    "axis": "distractors",
+    "monotone": true,
+    "worst_drop": -0.023461142151306055
+  },
+  {
+    "suite": "libero_spatial",
+    "axis": "light_bright",
+    "monotone": true,
+    "worst_drop": -0.0076052208431065076
+  },
+  {
+    "suite": "libero_spatial",
+    "axis": "light_color",
+    "monotone": true,
+    "worst_drop": -0.0347580688695113
+  },
+  {
+    "suite": "libero_spatial",
+    "axis": "light_dim",
+    "monotone": true,
+    "worst_drop": -0.010128122319777805
+  },
+  {
+    "suite": "libero_spatial",
+    "axis": "light_direction",
+    "monotone": true,
+    "worst_drop": -0.02340257614850999
+  },
+  {
+    "suite": "libero_spatial",
+    "axis": "sensor_noise",
+    "monotone": true,
+    "worst_drop": -0.13171663482983897
+  },
+  {
+    "suite": "libero_spatial",
+    "axis": "texture",
+    "monotone": true,
+    "worst_drop": -0.034861317028601985
+  }
+]

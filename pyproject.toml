@@ -1,0 +1,19 @@
+[project]
+name = "faultline-vla"
+version = "0.1.0"
+description = "Localizing visual-robustness failures inside Vision-Language-Action models."
+requires-python = ">=3.12"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

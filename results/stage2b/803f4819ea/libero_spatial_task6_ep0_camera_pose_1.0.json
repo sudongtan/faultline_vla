@@ -1,0 +1,1 @@
+{"suite": "libero_spatial", "task_id": 6, "episode": 0, "axis": "camera_pose", "m": 1.0, "success": true, "steps": 108, "calls": 11, "env_seed": 9000, "noise_seed": 10000, "perturb_seed": 6000, "seconds": 116.2}

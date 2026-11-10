@@ -1,0 +1,97 @@
+{
+  "config": {
+    "device": "cpu",
+    "image_size": "256",
+    "layouts": "[(1, 6), (1, 8), (2, 3), (2, 4), (2, 5), (3, 3), (4, 2)]",
+    "passes": "6",
+    "sim_steps": "50"
+  },
+  "config_hash": "57d847930a",
+  "torch": "2.15.0+cu132",
+  "simulation": {
+    "image_size": 256,
+    "env_setup_s": 9.26208683799996,
+    "env_step_with_two_camera_obs_s": 0.23648356200010312,
+    "single_camera_render_s": 0.10336416700010886
+  },
+  "components": [
+    {
+      "threads": 6,
+      "total_s": 2.313161883333578,
+      "embed_image_each_s": 0.5975285415001963,
+      "prefill_s": 0.3058557499998642,
+      "denoise_step_s": 0.08299311239989038,
+      "num_vlm_layers": 32,
+      "num_expert_layers": 32,
+      "parameters_millions": 604.934176
+    },
+    {
+      "threads": 8,
+      "total_s": 2.12829738983343,
+      "embed_image_each_s": 0.48717081250015326,
+      "prefill_s": 0.2728761669995947,
+      "denoise_step_s": 0.09057271659985418,
+      "num_vlm_layers": 32,
+      "num_expert_layers": 32,
+      "parameters_millions": 604.934176
+    }
+  ],
+  "layouts": [
+    {
+      "workers": 1,
+      "threads": 6,
+      "passes_per_worker": 6,
+      "slowest_worker_s": 14.688485423999737,
+      "seconds_per_pass_aggregate": 2.4480809039999563,
+      "seconds_per_pass_worker": 2.4480809039999563
+    },
+    {
+      "workers": 1,
+      "threads": 8,
+      "passes_per_worker": 6,
+      "slowest_worker_s": 12.569023381000079,
+      "seconds_per_pass_aggregate": 2.09483723016668,
+      "seconds_per_pass_worker": 2.09483723016668
+    },
+    {
+      "workers": 2,
+      "threads": 3,
+      "passes_per_worker": 6,
+      "slowest_worker_s": 25.732392845000504,
+      "seconds_per_pass_aggregate": 2.1443660704167087,
+      "seconds_per_pass_worker": 4.277305137416685
+    },
+    {
+      "workers": 2,
+      "threads": 4,
+      "passes_per_worker": 6,
+      "slowest_worker_s": 21.55005355100002,
+      "seconds_per_pass_aggregate": 1.7958377959166683,
+      "seconds_per_pass_worker": 3.5835693765833034
+    },
+    {
+      "workers": 2,
+      "threads": 5,
+      "passes_per_worker": 6,
+      "slowest_worker_s": 33.8057418060007,
+      "seconds_per_pass_aggregate": 2.817145150500058,
+      "seconds_per_pass_worker": 5.627122433000068
+    },
+    {
+      "workers": 3,
+      "threads": 3,
+      "passes_per_worker": 6,
+      "slowest_worker_s": 37.05273201700038,
+      "seconds_per_pass_aggregate": 2.0584851120555765,
+      "seconds_per_pass_worker": 5.986967076777798
+    },
+    {
+      "workers": 4,
+      "threads": 2,
+      "passes_per_worker": 6,
+      "slowest_worker_s": 39.93513381000048,
+      "seconds_per_pass_aggregate": 1.66396390875002,
+      "seconds_per_pass_worker": 6.41728143004165
+    }
+  ]
+}

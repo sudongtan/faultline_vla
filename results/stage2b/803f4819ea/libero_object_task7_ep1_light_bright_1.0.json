@@ -1,0 +1,1 @@
+{"suite": "libero_object", "task_id": 7, "episode": 1, "axis": "light_bright", "m": 1.0, "success": true, "steps": 170, "calls": 17, "env_seed": 10001, "noise_seed": 11001, "perturb_seed": 7001, "seconds": 130.3}
