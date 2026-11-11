@@ -1,0 +1,14 @@
+{
+  "conditions": [
+    "sensor_noise/0.6",
+    "camera_pose/0.6",
+    "camera_fov/0.6",
+    "distractors/0.5"
+  ],
+  "states_per_task": 4,
+  "bin_size": 4,
+  "noise_seeds": [
+    0,
+    1
+  ]
+}

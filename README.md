@@ -6,7 +6,7 @@ Robot policies built on vision-language models often fail when the scene looks d
 
 Everything here runs on a laptop CPU (Apple M1 Pro, inside arm64 Linux Docker). No GPU was used.
 
-## Findings so far
+## Findings
 
 1. **Visual changes, such as a moved camera or extra objects, barely change the model's next move, yet they make it fail whole tasks.** Shown the same moment with and without a perturbation, SmolVLA predicts almost the same next movement of the arm. SmolVLA samples its actions with some randomness, so even rerunning it on the identical image changes the movement a little. The perturbation changes it by less than that, for all 9 perturbation types on both suites. Yet when the robot carries out whole tasks with the perturbation present, it fails much more often (below). A likely reason is that a slight error repeated at every step builds up over the course of a task.
 
@@ -25,9 +25,13 @@ Everything here runs on a laptop CPU (Apple M1 Pro, inside arm64 Linux Docker). 
 
    A drop is marked confirmed when the 95% bootstrap interval of the paired drop excludes 0, a rule fixed before the run. LIBERO-Spatial's clean baseline is itself low (12/20), so its intervals are wide.
 
-3. **The failure has no single location.** The action expert reads a cached copy of every VLM layer. Swapping clean values into any block of up to 16 of the 32 layers removes at most 41–68% of the action error, so no window passes the pre-set 80% bar. The visual change is formed in the frozen vision encoder and carried almost unchanged through all 32 VLM layers. Layers 4–7 carry the largest single share.
+3. **The failure has no single location.** The action expert reads a cached copy of every VLM layer. Swapping clean values into any block of up to 16 of the 32 layers removes at most 41–68% of the action error, so no window passes the pre-set 80% bar. The visual change is formed in the frozen vision encoder and carried almost unchanged through all 32 VLM layers. Layers 4–7 carry the largest single share. A partial check at weaker strength (5 LIBERO-Object tasks) gives the same picture.
 
    ![Share of action error recovered by restoring each block of layers](results/figs/stage3_break_heatmap.png)
+
+4. **The perturbations re-encode the scene rather than erase it.** On LIBERO-Object, a linear probe can still read where the target object is from perturbed features, as well as from clean ones, once it is retrained on them. A probe trained on clean features fails on perturbed ones. So the information survives, but in a form that a readout trained only on clean images doesn't follow. On LIBERO-Spatial the probes are too weak to tell. This analysis was added after the planned one turned out uninformative (see the Stage 3 report).
+
+5. **The one place a fix could act is the image encoder's output.** Putting the clean encoder output back into a perturbed input reproduces the clean action exactly, in all 320 cases tested. No block of VLM layers comes close, so a cheap targeted fix would have to sit at or before that point.
 
 These results come from one checkpoint, one strength per perturbation and 20 episodes per condition. Each report lists its limits in a "what this shows / what it doesn't" section.
 
@@ -38,11 +42,11 @@ These results come from one checkpoint, one strength per perturbation and 20 epi
 | 0 | Can SmolVLA and LIBERO run usefully on a CPU? | Yes. About 2 s per forward pass in `float32`, and closed-loop success matches published figures. | [stage0.md](reports/stage0.md) |
 | 1 | Can we render the same simulator state clean and perturbed? | Yes. 9 axes with exact pairing, and image change rises steadily with strength on all 18 axis-suite pairs. | [stage1.md](reports/stage1.md) |
 | 2 | Which perturbations change actions, and which break tasks? | On a single frame, no perturbation changes the predicted movement more than rerunning the model does. On whole tasks, distractors, camera pose and FOV, and sensor noise cause failures. | [stage2.md](reports/stage2.md) |
-| 3 | Where inside the network do those failures arise? | Diffuse on all 8 cases. The change is set in the vision encoder, and layers 4–7 matter most. | [stage3.md](reports/stage3.md) |
+| 3 | Where inside the network do those failures arise? | Diffuse on all 8 cases. The change is set in the vision encoder and re-encodes, rather than erases, the target's position. Layers 4–7 matter most. | [stage3.md](reports/stage3.md) |
 | 4 | Can a small adapter at the diagnosed site fix it? | Skipped. Stage 3 found no localized site to target. | |
 | 5 | Does the fix raise task success? | Skipped, since there is no fix to test. The closed-loop screen in Stage 2 already measures the failures. | |
 
-Stages 6 and 7 (a π0.5 comparison and fine-tuning baselines) are optional and need a GPU.
+The project ends at Stage 3. Stages 6 and 7 (a π0.5 comparison and fine-tuning baselines) need a GPU and were not run.
 
 ## How it works
 
@@ -50,6 +54,7 @@ Stages 6 and 7 (a π0.5 comparison and fine-tuning baselines) are optional and n
 - **Open-loop sensitivity.** SmolVLA predicts an action chunk from the clean and the perturbed image with identical flow-matching noise. The change is compared with how much the action moves when only the noise seed changes.
 - **Closed-loop screen.** Paired episodes share the initial state and noise seed. The perturbation is drawn once per episode and held fixed, and the policy replans every 10 steps.
 - **Readout patching.** SmolVLA's VLM runs once and caches each layer's keys and values, which the action expert reads at every layer. Mixing clean and perturbed caches layer by layer shows which readouts carry the error, without touching the VLM's own computation. This follows path-patching practice from interpretability research.
+- **Probes.** Ridge regressions read the target object's position from features at each depth. Trained on clean and tested on perturbed features (transfer) or retrained on perturbed ones (refit), they separate information that is lost from information that has only moved.
 - **Drift.** Clean-vs-perturbed distance of image-token features at each depth, scaled by the distance between two different states of the same task.
 
 Statistics: Wilson intervals for success rates, task-level bootstrap intervals for everything else, separate logged seeds for environment, perturbation and policy noise, and pass/fail rules written down before each run.
@@ -78,9 +83,13 @@ python scripts/stage2_action_sensitivity.py --dataset data/stage2/<hash>      # 
 python scripts/stage2b_closed_loop_screen.py             # 240 episodes, ~4 h
 python scripts/stage3_localize.py --dataset data/stage2/<hash> \
   --conditions sensor_noise/1.0 camera_pose/1.0 camera_fov/1.0 distractors/1.0   # ~5 h
+python scripts/stage3_connector_check.py --dataset data/stage2/<hash> \
+  --conditions sensor_noise/1.0 camera_pose/1.0 camera_fov/1.0 distractors/1.0   # ~1.2 h
+python scripts/stage3_probes.py --workers 1 --threads 3 \
+  --conditions sensor_noise/1.0 camera_pose/1.0 camera_fov/1.0 distractors/1.0   # ~4.5 h
 ```
 
-Times are for the M1 Pro above. Tests and lint run with `pytest` and `ruff check scripts src tests`.
+Times are for the M1 Pro above. Lint runs with `ruff check scripts src tests`. Run the two test files in separate processes, `pytest tests/test_perturb.py` and `pytest tests/test_patching.py`, because loading the policy and rendering with OSMesa in one process can segfault.
 
 ## Repository layout
 
@@ -107,4 +116,6 @@ Large intermediate data (rendered datasets, activations) goes in `data/`, which 
 - Fei et al., *LIBERO-Plus* (2025), [arXiv:2510.13626](https://arxiv.org/abs/2510.13626). Measures VLA robustness to perturbations behaviorally.
 - Goldowsky-Dill et al., *Localizing model behavior with path patching* (2023), [arXiv:2304.05969](https://arxiv.org/abs/2304.05969). The patching approach.
 - Kornblith et al., *Similarity of neural network representations revisited* (2019), [arXiv:1905.00414](https://arxiv.org/abs/1905.00414). CKA.
+- Hewitt and Liang, *Designing and interpreting probes with control tasks* (2019), [arXiv:1909.03368](https://arxiv.org/abs/1909.03368). Probe design.
+- Belinkov, *Probing classifiers: promises, shortcomings, and advances* (2022), [arXiv:2102.12452](https://arxiv.org/abs/2102.12452). What probes can and can't show.
 - Ross, Gordon and Bagnell, *A reduction of imitation learning to no-regret online learning* (2011), [arXiv:1011.0686](https://arxiv.org/abs/1011.0686). Why small per-step errors compound.
