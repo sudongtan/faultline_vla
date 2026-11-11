@@ -16,7 +16,7 @@ The axes are the four that met the closed-loop failure rule in Stage 2 in at lea
 - **Induce:** start from the clean cache and put perturbed readouts into one bin. The induced share is the error this produces as a share of the full perturbation's error.
 - **Agentview only:** like restore, but swap only the 64 agentview image-token positions.
 
-Action error is the mean L2 distance over the 50-step chunk on the 6 arm dimensions. Recovery pools error over states, and intervals are 95% bootstrap CIs over the 10 tasks.
+Action error is the mean L2 distance over the 50-step chunk on the 6 arm dimensions. Recovery pools error over states, and intervals are 95% bootstrap CIs over the 10 tasks. In the patching tables, the `recovery` column of `induce` rows holds 1 minus the induced share.
 
 **Drift.** Cosine distance between clean and perturbed activations for agentview tokens, at vision-encoder blocks 2, 5, 8 and 11, the connector output and each VLM layer's cached values. It is divided by the distance between two different clean states of the same task, so 1 means the perturbation moves the representation as far as a change of state does. Linear CKA (Kornblith et al., 2019) is also reported.
 
@@ -74,7 +74,7 @@ Linear probes ask whether the perturbed features still contain where the target 
 - **Transfer:** train on clean features, test on perturbed ones. High transfer means the information is still there in the same form.
 - **Refit:** train and test on perturbed features. High refit with low transfer means the information is still there but encoded differently, so it has moved, not been destroyed.
 
-**The planned analysis can't answer the question.** On clean features its held-out-task R² is only about 0.27 on Object and below 0 on Spatial. With states from the same tasks in training, the same features reach about 0.9 on Object, so the information is there. The gap comes from layout: up to 58% of the variance in target position lies between tasks, and a probe can't predict an unseen task's layout from 9 others. Its figure is kept as [stage3_probes_target_pos.png](../results/figs/stage3_probes_target_pos.png). It also shows perturbed refit scoring above clean, which this analysis did not resolve.
+**The planned analysis can't answer the question.** On clean features its held-out-task R² is only about 0.27 on Object and below 0 on Spatial. In a diagnostic check that isn't saved in the results tables, a random split that puts states from the same tasks in training lets the same features reach about 0.9 on Object, so the information is there. The gap comes from layout: in that check, up to 58% of the variance in target position lay between tasks, and a probe can't predict an unseen task's layout from 9 others. Its figure is kept as [stage3_probes_target_pos.png](../results/figs/stage3_probes_target_pos.png). It also shows perturbed refit scoring above clean, which this analysis did not resolve.
 
 **Within-task analysis (added after the planned one).** Each task's mean is subtracted from the labels and the features, so the probe only has to follow how the target moves within a task. Tasks are still held out. For transfer, perturbed features are centered with the clean task means, so the probe gets no help from perturbed statistics.
 
@@ -88,9 +88,9 @@ Linear probes ask whether the perturbed features still contain where the target 
 | Object | Distractors | 0.60 [0.35, 0.72] | 0.17 [−0.26, 0.39] | 0.68 [0.53, 0.75] |
 | Spatial | all four | 0.27 [−0.19, 0.40] | −0.61 to −0.33 | 0.10 to 0.29 |
 
-Within-task R² for target position at the connector output, with 95% task-bootstrap intervals. Other depths look the same (figure). The gripper-to-target vector gives the same pattern at lower values.
+Within-task R² for target position at the connector output, with 95% task-bootstrap intervals. Other depths look the same (figure). The gripper-to-target vector gives the same pattern at lower values: [within-task](../results/figs/stage3_probes_eef_to_target_within.png), [planned](../results/figs/stage3_probes_eef_to_target.png).
 
-- **Object: moved, not destroyed.** For every axis and at every depth from vision block 5 on, refit matches clean. A probe trained on clean features fails on perturbed ones, with transfer at or below 0 for all four axes. The position of the target is still linearly readable after the perturbation, but in a different direction of feature space. This is the same for camera changes, sensor noise and distractors, so it isn't specific to camera pose.
+- **Object: moved, not destroyed.** For every axis and at every depth from vision block 5 on, refit matches clean. A probe trained on clean features fails on perturbed ones. Transfer is at or below 0 for sensor noise, camera pose and FOV. For distractors it stays well under clean (0.09 to 0.37 from vision block 5 on, against about 0.6), and its interval at the connector includes 0. The position of the target is still linearly readable after the perturbation, but in a different direction of feature space. This is the same for camera changes, sensor noise and distractors, so it isn't specific to camera pose.
 - **Spatial: inconclusive.** Even the clean probe's interval includes 0, so there is no baseline to compare against. Spatial's target is the same black bowl in different layouts, and 30 states per task are too few to track it.
 - **Pixel baseline: uninformative.** Raw 16×16 pixels give large negative R² in both analyses, so they don't serve as the planned lower bound.
 
@@ -99,7 +99,7 @@ Within-task R² for target position at the connector output, with 95% task-boots
 | Hypothesis | Verdict | Evidence |
 |---|---|---|
 | H1: the frozen encoder absorbs photometric shifts | Refuted for sensor noise; lighting and texture not tested | Sensor noise has the largest persistent drift on both suites. Lighting and texture didn't cause closed-loop failures, so they weren't run here. |
-| H2: camera pose keeps world-frame information while action error appears late | Refuted for "error appears late" (both suites). "Keeps information" is suggestive, Object only. | Camera pose has no late window: its best windows start at layer 0 or 4. Within-task probes on Object show the target's position survives at every depth but moves to a different encoding (refit ≈ clean, transfer ≤ 0). Spatial probes are too weak to judge, and the same holds for the other three axes, so it isn't camera-specific. |
+| H2: camera pose keeps world-frame information while action error appears late | Refuted for "error appears late" (both suites). "Keeps information" is suggestive, Object only. | Camera pose has no late window: its best windows start at layer 0 or 4. Within-task probes on Object show the target's position survives at every depth but moves to a different encoding (refit ≈ clean, transfer far below clean). Spatial probes are too weak to judge, and the same holds for the other three axes, so it isn't camera-specific. |
 | H3: distractors break mid-backbone | Refuted on both suites (readout and drift parts) | No middle-layer window: the best windows start at layers 0 or 4 and no window reaches 80%. Drift does not grow inside the VLM. The target-object token part wasn't tested. |
 
 ## What this shows / what it doesn't

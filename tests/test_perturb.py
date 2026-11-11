@@ -99,12 +99,17 @@ def _render_unmodified(suite: str, task_id: int, state: np.ndarray) -> list[np.n
 
     task = benchmark.get_benchmark_dict()[suite]().get_task(task_id)
     bddl = Path(get_libero_path("bddl_files")) / task.problem_folder / task.bddl_file
-    env = OffScreenRenderEnv(bddl_file_name=str(bddl), camera_heights=IMAGE_SIZE, camera_widths=IMAGE_SIZE)
+    env = OffScreenRenderEnv(
+        bddl_file_name=str(bddl), camera_heights=IMAGE_SIZE, camera_widths=IMAGE_SIZE
+    )
     env.seed(0)
     env.reset()
     env.env.sim.set_state_from_flattened(state)
     env.env.sim.forward()
-    images = [env.env.sim.render(camera_name=c, height=IMAGE_SIZE, width=IMAGE_SIZE)[::-1, ::-1].copy() for c in (AGENTVIEW, WRIST)]
+    images = [
+        env.env.sim.render(camera_name=c, height=IMAGE_SIZE, width=IMAGE_SIZE)[::-1, ::-1].copy()
+        for c in (AGENTVIEW, WRIST)
+    ]
     env.close()
     return images
 

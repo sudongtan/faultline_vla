@@ -142,13 +142,10 @@ class Perturber:
         self.data = self.sim.data._data
         self.textures_dir = Path(textures_dir)
         self.bottom_offsets = bottom_offsets
-        self.camera_id = mujoco.mj_name2id(
-            self.model, mujoco.mjtObj.mjOBJ_CAMERA, AGENTVIEW
-        )
+        self.camera_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_CAMERA, AGENTVIEW)
         self.texture_id = self._find_surface_texture()
         self.distractor_ids = [
-            mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_BODY, name)
-            for name in bottom_offsets
+            mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_BODY, name) for name in bottom_offsets
         ]
         if min(self.distractor_ids, default=0) < 0:
             raise ValueError("A distractor body is missing from the model.")
@@ -301,9 +298,7 @@ class Perturber:
         forward = -rotation.reshape(3, 3)[:, 2]
         origin = self.default_cam_pos.astype(np.float64)
         geom_id = np.array([-1], dtype=np.int32)
-        distance = mujoco.mj_ray(
-            self.model, self.data, origin, forward, None, 1, -1, geom_id
-        )
+        distance = mujoco.mj_ray(self.model, self.data, origin, forward, None, 1, -1, geom_id)
         return origin + forward * (distance if distance > 0 else 1.0)
 
     def _apply_camera_pose(self, m: float, rng: np.random.Generator) -> None:

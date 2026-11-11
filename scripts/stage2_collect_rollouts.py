@@ -87,9 +87,7 @@ def main() -> None:
             arrays, outcomes = {}, []
             for episode in range(args.episodes):
                 start = time.perf_counter()
-                result = run_episode(
-                    runner, scene, episode, args.seed + episode, args.action_steps
-                )
+                result = run_episode(runner, scene, episode, args.seed + episode, args.action_steps)
                 arrays[f"states_{episode}"] = result["states"]
                 outcomes.append(result["success"])
                 print(

@@ -8,22 +8,22 @@ Everything here runs on a laptop CPU (Apple M1 Pro, inside arm64 Linux Docker). 
 
 ## Findings
 
-1. **Visual changes, such as a moved camera or extra objects, barely change the model's next move, yet they make it fail whole tasks.** Shown the same moment with and without a perturbation, SmolVLA predicts almost the same next movement of the arm. SmolVLA samples its actions with some randomness, so even rerunning it on the identical image changes the movement a little. The perturbation changes it by less than that, for all 9 perturbation types on both suites. Yet when the robot carries out whole tasks with the perturbation present, it fails much more often (below). A likely reason is that a slight error repeated at every step builds up over the course of a task.
+1. **Visual changes, such as a moved camera or extra objects, barely change the model's next move, yet they make it fail whole tasks.** Shown the same moment with and without a perturbation, SmolVLA predicts almost the same next movement of the arm. SmolVLA samples its actions with some randomness, so even rerunning it on the identical image changes the movement a little. For none of the 9 perturbation types, on either suite, is the change detectably larger than that. Only sensor noise on LIBERO-Spatial comes close, with a mean change slightly above the rerun variation but an interval that includes it. Yet when the robot carries out whole tasks with the perturbation present, it fails much more often (below). A likely reason is that a slight error repeated at every step builds up over the course of a task.
 
-2. **Distractor objects break the policy on both suites. Camera changes break it on LIBERO-Object.** The figure shows a paired closed-loop screen of 240 episodes:
+2. **Distractor objects break the policy on both suites. Camera changes probably break it on LIBERO-Object.** The figure shows a paired closed-loop screen of 240 episodes:
 
    ![Closed-loop success under each perturbation](results/figs/stage2b_success.png)
 
    | Perturbation | LIBERO-Spatial success | LIBERO-Object success |
    |---|---|---|
    | None (clean) | 12/20 | 19/20 |
-   | Distractor objects | 7/20 (drop confirmed) | 9/20 (drop confirmed) |
-   | Camera field of view | 5/20 | 9/20 (drop confirmed) |
-   | Camera pose | 7/20 | 11/20 (drop confirmed) |
-   | Sensor noise | 5/20 (drop confirmed) | 16/20 |
+   | Distractor objects | 7/20 (drop) | 9/20 (drop) |
+   | Camera field of view | 5/20 | 9/20 (drop) |
+   | Camera pose | 7/20 | 11/20 (drop) |
+   | Sensor noise | 5/20 (drop) | 16/20 |
    | Brighter lighting (control) | 11/20 | 18/20 |
 
-   A drop is marked confirmed when the 95% bootstrap interval of the paired drop excludes 0, a rule fixed before the run. LIBERO-Spatial's clean baseline is itself low (12/20), so its intervals are wide.
+   A drop is marked when the 95% bootstrap interval of the paired drop excludes 0, a rule fixed before the run. Only distractors meet it on both suites, so only that failure counts as confirmed. Camera pose and FOV (Object only) and sensor noise (Spatial only) are suggestive. LIBERO-Spatial's clean baseline is itself low (12/20), so its intervals are wide.
 
 3. **The failure has no single location.** The action expert reads a cached copy of every VLM layer. Swapping clean values into any block of up to 16 of the 32 layers removes at most 41–68% of the action error, so no window passes the pre-set 80% bar. The visual change is formed in the frozen vision encoder and carried almost unchanged through all 32 VLM layers. Layers 4–7 carry the largest single share. A partial check at weaker strength (5 LIBERO-Object tasks) gives the same picture.
 
@@ -31,7 +31,7 @@ Everything here runs on a laptop CPU (Apple M1 Pro, inside arm64 Linux Docker). 
 
 4. **The perturbations re-encode the scene rather than erase it.** On LIBERO-Object, a linear probe can still read where the target object is from perturbed features, as well as from clean ones, once it is retrained on them. A probe trained on clean features fails on perturbed ones. So the information survives, but in a form that a readout trained only on clean images doesn't follow. On LIBERO-Spatial the probes are too weak to tell. This analysis was added after the planned one turned out uninformative (see the Stage 3 report).
 
-5. **The one place a fix could act is the image encoder's output.** Putting the clean encoder output back into a perturbed input reproduces the clean action exactly, in all 320 cases tested. No block of VLM layers comes close, so a cheap targeted fix would have to sit at or before that point.
+5. **A cheap targeted fix would have to sit at or before the connector, not in the VLM.** The connector maps the vision encoder's output into the VLM, and it is the only way the image enters the model. Restoring its clean output therefore reproduces the clean action by construction. The check (exact in all 320 cases) confirms the patching is wired correctly rather than being a finding in itself. What it shows is that a fix at that point isn't capped the way any block of VLM layers is (finding 3).
 
 These results come from one checkpoint, one strength per perturbation and 20 episodes per condition. Each report lists its limits in a "what this shows / what it doesn't" section.
 
@@ -41,7 +41,7 @@ These results come from one checkpoint, one strength per perturbation and 20 epi
 |---|---|---|---|
 | 0 | Can SmolVLA and LIBERO run usefully on a CPU? | Yes. About 2 s per forward pass in `float32`, and closed-loop success matches published figures. | [stage0.md](reports/stage0.md) |
 | 1 | Can we render the same simulator state clean and perturbed? | Yes. 9 axes with exact pairing, and image change rises steadily with strength on all 18 axis-suite pairs. | [stage1.md](reports/stage1.md) |
-| 2 | Which perturbations change actions, and which break tasks? | On a single frame, no perturbation changes the predicted movement more than rerunning the model does. On whole tasks, distractors, camera pose and FOV, and sensor noise cause failures. | [stage2.md](reports/stage2.md) |
+| 2 | Which perturbations change actions, and which break tasks? | On a single frame, no perturbation changes the predicted movement detectably more than rerunning the model does. On whole tasks, distractors cause failures on both suites. Camera pose and FOV (Object) and sensor noise (Spatial) are suggestive. | [stage2.md](reports/stage2.md) |
 | 3 | Where inside the network do those failures arise? | Diffuse on all 8 cases. The change is set in the vision encoder and re-encodes, rather than erases, the target's position. Layers 4–7 matter most. | [stage3.md](reports/stage3.md) |
 | 4 | Can a small adapter at the diagnosed site fix it? | Skipped. Stage 3 found no localized site to target. | |
 | 5 | Does the fix raise task success? | Skipped, since there is no fix to test. The closed-loop screen in Stage 2 already measures the failures. | |
@@ -88,6 +88,8 @@ python scripts/stage3_connector_check.py --dataset data/stage2/<hash> \
 python scripts/stage3_probes.py --workers 1 --threads 3 \
   --conditions sensor_noise/1.0 camera_pose/1.0 camera_fov/1.0 distractors/1.0   # ~4.5 h
 ```
+
+The weaker-strength check in the Stage 3 report reuses `stage3_localize.py` with `--conditions sensor_noise/0.6 camera_pose/0.6 camera_fov/0.6 distractors/0.5 --figure-suffix _m06`. It was stopped after 5 of 20 shards (LIBERO-Object tasks 0–3 and 6). The full run takes far longer than the m = 1 run, at over 2 hours per shard.
 
 Times are for the M1 Pro above. Lint runs with `ruff check scripts src tests`. Run the two test files in separate processes, `pytest tests/test_perturb.py` and `pytest tests/test_patching.py`, because loading the policy and rendering with OSMesa in one process can segfault.
 

@@ -1,6 +1,6 @@
 # Stage 2: Open-loop action sensitivity and closed-loop screen
 
-**Outcome: the open-loop gate is a no-go, but the closed-loop screen found real failures.** Changing the image at full strength moves SmolVLA's next action by less than redrawing the flow-matching noise does, on 18 of 18 axis-suite pairs under the pre-set test. Task success still falls sharply under some of the same perturbations. Distractors lower success on both suites, and camera pose and field of view lower it on LIBERO-Object.
+**Outcome: the open-loop gate is a no-go, but the closed-loop screen found real failures.** Changing the image at full strength doesn't move SmolVLA's next action detectably more than redrawing the flow-matching noise does, on 18 of 18 axis-suite pairs under the pre-set test. Task success still falls sharply under some of the same perturbations. Distractors lower success on both suites, and camera pose and field of view lower it on LIBERO-Object.
 
 The open-loop pilot uses 40 states per suite (2 demo and 2 rollout states from each of 10 tasks) across 44 perturbation conditions. The plan's full dataset was 500 states per suite. The closed-loop screen is 240 episodes.
 
@@ -83,7 +83,7 @@ Open-loop size does not predict the closed-loop drop on its own. Spatial sensor 
 
 ## What this shows / what it doesn't
 
-**Shows.** For this checkpoint, single-step actions respond less to visual change than to sampling noise, yet task success drops by up to half under distractors, camera pose and field of view. Lighting at this strength (brightening) produced no detectable drop. An open-loop gate on first-action change would have missed failures that the closed-loop test finds.
+**Shows.** For this checkpoint, single-step actions respond no more detectably to visual change than to sampling noise, yet task success drops by up to half under distractors, camera pose and field of view. Lighting at this strength (brightening) produced no detectable drop. An open-loop gate on first-action change would have missed failures that the closed-loop test finds.
 
 **Doesn't show.** These results come from one chosen maximum magnitude per axis and 20 paired episodes per cell, with two per task, so intervals are wide and clean Spatial success is itself only 12/20. Spatial tasks 3, 5 and 9 failed both clean episodes, which limits how large a drop they can show. A task bootstrap with 10 tasks is coarse. Fixture placement is held at one layout per task, so variation between episodes comes from object and robot initial states. Distractors don't collide, so the robot can pass through them, and they can hide the target. Only agentview is perturbed. The screen ran only the five axes above, so the others remain untested in closed loop. It also says nothing yet about where in the network the failures arise, which is Stage 3.
 

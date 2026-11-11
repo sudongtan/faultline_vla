@@ -154,7 +154,9 @@ def plot_curves(summary, path: Path) -> None:
     for plot, axis in zip(axes.ravel(), AXES, strict=True):
         for suite, color in SUITE_COLORS.items():
             data = summary[(summary.axis == axis) & (summary.suite == suite)].sort_values("m")
-            plot.fill_between(data.m, data.lpips_low, data.lpips_high, color=color, alpha=0.15, lw=0)
+            plot.fill_between(
+                data.m, data.lpips_low, data.lpips_high, color=color, alpha=0.15, lw=0
+            )
             plot.plot(data.m, data.lpips, color=color, marker="o", ms=4, label=SUITE_LABELS[suite])
         plot.set_title(AXIS_LABELS[axis], loc="left")
     axes[0, 0].legend(loc="upper left")
@@ -193,7 +195,9 @@ def plot_contact_sheet(shard: Path, path: Path, state_index: int) -> None:
             axes[row, 0].grid(False)
             for spine in axes[row, 0].spines.values():
                 spine.set_visible(False)
-            axes[row, 0].set_ylabel(AXIS_LABELS[axis], fontsize=8, rotation=0, ha="right", va="center")
+            axes[row, 0].set_ylabel(
+                AXIS_LABELS[axis], fontsize=8, rotation=0, ha="right", va="center"
+            )
     figure.tight_layout(pad=0.3)
     figure.savefig(path, dpi=150)
     plt.close(figure)
@@ -231,7 +235,9 @@ def main() -> None:
         for suite in SUITES
         for task in range(args.tasks)
     ]
-    print(f"config {config_hash}: rendering {len(jobs)} tasks with {args.workers} workers", flush=True)
+    print(
+        f"config {config_hash}: rendering {len(jobs)} tasks with {args.workers} workers", flush=True
+    )
     context = mp.get_context("spawn")
     with context.Pool(args.workers, maxtasksperchild=1) as pool:
         for message in pool.starmap(render_task, jobs, chunksize=1):
@@ -250,8 +256,12 @@ def main() -> None:
         print(json.dumps(row), flush=True)
 
     plot_curves(summary, figures / "stage1_image_change.png")
-    plot_contact_sheet(shard_dir / "libero_spatial_task0.npz", figures / "stage1_contact_spatial.png", 0)
-    plot_contact_sheet(shard_dir / "libero_object_task0.npz", figures / "stage1_contact_object.png", 0)
+    plot_contact_sheet(
+        shard_dir / "libero_spatial_task0.npz", figures / "stage1_contact_spatial.png", 0
+    )
+    plot_contact_sheet(
+        shard_dir / "libero_object_task0.npz", figures / "stage1_contact_object.png", 0
+    )
     print(f"done {config_hash}", flush=True)
 
 

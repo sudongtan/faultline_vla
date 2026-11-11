@@ -16,7 +16,9 @@ import pandas as pd
 NOISE_SEED = 0
 
 
-def check(dataset: Path, conditions: list[str], states: int, threads: int, device: str) -> pd.DataFrame:
+def check(
+    dataset: Path, conditions: list[str], states: int, threads: int, device: str
+) -> pd.DataFrame:
     from faultline_vla.models.loaders import PolicyRunner
     from faultline_vla.models.patching import ReadoutPatcher, action_error
 
@@ -35,9 +37,15 @@ def check(dataset: Path, conditions: list[str], states: int, threads: int, devic
                 connector = patcher.capture(clean_batch, [])["connector"]
                 for condition in conditions:
                     axis, m = condition.split("/")
-                    batch = runner.prepare(data[f"perturbed/{condition}"][index], wrist, proprio, language)
-                    baseline = action_error(patcher.decode(patcher.prefill(batch), noise), clean_action)
-                    patched = patcher.decode(patcher.prefill_with_connector(batch, connector), noise)
+                    batch = runner.prepare(
+                        data[f"perturbed/{condition}"][index], wrist, proprio, language
+                    )
+                    baseline = action_error(
+                        patcher.decode(patcher.prefill(batch), noise), clean_action
+                    )
+                    patched = patcher.decode(
+                        patcher.prefill_with_connector(batch, connector), noise
+                    )
                     rows.append(
                         {
                             "suite": suite,

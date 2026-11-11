@@ -96,7 +96,8 @@ def build_task(
         return scene.env.env._get_observations(force_update=True)
 
     columns: dict[str, list] = {
-        name: [] for name in ("states", "proprio", "clean", "wrist", "demo_action", "source", "phase")
+        name: []
+        for name in ("states", "proprio", "clean", "wrist", "demo_action", "source", "phase")
     }
     perturbed: dict[str, list] = {}
     for index, sample in enumerate(samples):

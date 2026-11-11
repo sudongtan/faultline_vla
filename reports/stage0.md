@@ -72,4 +72,4 @@ Details are in `docs/model_notes.md`. The checkpoint has 604.9M parameters and a
 
 This shows that the pipeline is correct enough to study: the model solves tasks at rates consistent with its paper, and CPU throughput fits the planned open-loop budget. It doesn't establish a precise success rate, because the sample covers 15 episodes per suite on half of each suite's tasks, and intervals are wide. It also doesn't prove that replanning every 10 steps is equivalent to every step. Our data is too small for that, so the choice rests mainly on the paper's result and the 6–7× speedup. Timings come from one laptop and shouldn't be read as portable figures.
 
-**Decision:** replan every 10 steps in closed-loop runs. Stage 5's 720 episodes would then take about 13 hours.
+**Decision:** replan every 10 steps in closed-loop runs. Stage 5's 720 episodes would then take about 13 hours. (Stage 5 was later skipped, since Stage 3 found no localized site to fix.)

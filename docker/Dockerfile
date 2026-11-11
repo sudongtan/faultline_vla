@@ -6,7 +6,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libosmesa6-dev libgl1 libglu1-mesa libegl1-mesa-dev libglew-dev \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir "lerobot[smolvla,libero]==0.7.0"
+# Versions used for all reported results (checked in the built image).
+RUN pip install --no-cache-dir "lerobot[smolvla,libero]==0.7.0" "torch==2.15.0" "mujoco==3.8.1" "robosuite==1.4.0"
 RUN pip install --no-cache-dir pytest ruff lpips scikit-image h5py pandas pyarrow matplotlib scikit-learn
 
 ENV MUJOCO_GL=osmesa \

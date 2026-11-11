@@ -26,7 +26,11 @@ def quat_to_axis_angle(quaternion: np.ndarray) -> np.ndarray:
 def proprio_from_obs(raw: dict) -> np.ndarray:
     """Build the 8-D state from a raw LIBERO observation."""
     return np.concatenate(
-        (raw["robot0_eef_pos"], quat_to_axis_angle(raw["robot0_eef_quat"]), raw["robot0_gripper_qpos"])
+        (
+            raw["robot0_eef_pos"],
+            quat_to_axis_angle(raw["robot0_eef_quat"]),
+            raw["robot0_gripper_qpos"],
+        )
     ).astype(np.float32)
 
 

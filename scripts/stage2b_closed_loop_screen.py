@@ -38,7 +38,9 @@ ENV_SEED = 3000
 NOISE_SEED = 4000
 
 
-def observe(scene, axis: str, m: float, held, perturb_seed: int, key: int) -> tuple[np.ndarray, np.ndarray]:
+def observe(
+    scene, axis: str, m: float, held, perturb_seed: int, key: int
+) -> tuple[np.ndarray, np.ndarray]:
     """Render a perturbed agentview and an unperturbed wrist view of the current state."""
     from faultline_vla.envs.paired import WRIST, render
     from faultline_vla.envs.perturb import AGENTVIEW, apply_image_axis
@@ -54,7 +56,9 @@ def observe(scene, axis: str, m: float, held, perturb_seed: int, key: int) -> tu
     return agentview, wrist
 
 
-def run_episode(runner, suite: str, task_id: int, episode: int, axis: str, m: float, action_steps: int) -> dict:
+def run_episode(
+    runner, suite: str, task_id: int, episode: int, axis: str, m: float, action_steps: int
+) -> dict:
     from faultline_vla.envs.paired import make_scene
     from faultline_vla.models.loaders import proprio_from_obs
 
@@ -87,7 +91,13 @@ def run_episode(runner, suite: str, task_id: int, episode: int, axis: str, m: fl
         if not queue:
             agentview, wrist = observe(scene, axis, m, held, perturb_seed, step)
             first_view = agentview if first_view is None else first_view
-            chunk = runner.predict(agentview, wrist, proprio_from_obs(raw), scene.language, runner.make_noise(noise_seed + step))
+            chunk = runner.predict(
+                agentview,
+                wrist,
+                proprio_from_obs(raw),
+                scene.language,
+                runner.make_noise(noise_seed + step),
+            )
             queue = list(chunk[:action_steps])
             calls += 1
         raw, _, done, _ = env.step(queue.pop(0))
@@ -98,14 +108,32 @@ def run_episode(runner, suite: str, task_id: int, episode: int, axis: str, m: fl
             break
     env.close()
     return {
-        "suite": suite, "task_id": task_id, "episode": episode, "axis": axis, "m": m,
-        "success": success, "steps": step + 1, "calls": calls,
-        "env_seed": env_seed, "noise_seed": noise_seed, "perturb_seed": perturb_seed,
+        "suite": suite,
+        "task_id": task_id,
+        "episode": episode,
+        "axis": axis,
+        "m": m,
+        "success": success,
+        "steps": step + 1,
+        "calls": calls,
+        "env_seed": env_seed,
+        "noise_seed": noise_seed,
+        "perturb_seed": perturb_seed,
         "first_view": first_view,
     }
 
 
-def run_condition(suite: str, task_id: int, episode: int, axis: str, m: float, action_steps: int, path: Path, threads: int, device: str) -> None:
+def run_condition(
+    suite: str,
+    task_id: int,
+    episode: int,
+    axis: str,
+    m: float,
+    action_steps: int,
+    path: Path,
+    threads: int,
+    device: str,
+) -> None:
     """Run one episode and save it. Runs in its own process, so memory is returned after each one."""
     # Load torch before creating the OSMesa context, the same order LeRobot's evaluator uses.
     from faultline_vla.models.loaders import PolicyRunner
@@ -135,17 +163,31 @@ def wilson(successes: int, n: int, z: float = 1.959964) -> tuple[float, float]:
 def paired_drop(frame: pd.DataFrame, axis: str, resamples: int, seed: int = 0) -> dict[str, float]:
     """Clean minus perturbed success, with a CI from resampling tasks. Only complete pairs count."""
     key = ["task_id", "episode"]
-    pair = frame[frame.axis == "clean"].merge(frame[frame.axis == axis], on=key, suffixes=("_clean", "_pert"))
+    pair = frame[frame.axis == "clean"].merge(
+        frame[frame.axis == axis], on=key, suffixes=("_clean", "_pert")
+    )
     difference = pair.success_clean.astype(float) - pair.success_pert.astype(float)
     tasks = difference.groupby(pair.task_id).mean().to_numpy()
     if len(tasks) == 0:
-        return {"pairs": 0, "drop": float("nan"), "drop_low": float("nan"), "drop_high": float("nan")}
+        return {
+            "pairs": 0,
+            "drop": float("nan"),
+            "drop_low": float("nan"),
+            "drop_high": float("nan"),
+        }
     samples = np.random.default_rng(seed).choice(tasks, size=(resamples, len(tasks))).mean(axis=1)
     low, high = np.percentile(samples, [2.5, 97.5])
-    return {"pairs": len(pair), "drop": float(difference.mean()), "drop_low": float(low), "drop_high": float(high)}
+    return {
+        "pairs": len(pair),
+        "drop": float(difference.mean()),
+        "drop_low": float(low),
+        "drop_high": float(high),
+    }
 
 
-def analyze(output: Path, results: Path, tag: str, conditions: list, expected: int, resamples: int) -> None:
+def analyze(
+    output: Path, results: Path, tag: str, conditions: list, expected: int, resamples: int
+) -> None:
     import matplotlib.pyplot as plt
 
     from faultline_vla.viz import AXIS_LABELS, SUITE_COLORS, SUITE_LABELS, apply_style
@@ -160,7 +202,16 @@ def analyze(output: Path, results: Path, tag: str, conditions: list, expected: i
         for axis, _ in conditions:
             group = data[data.axis == axis]
             low, high = wilson(int(group.success.sum()), len(group))
-            row = {"suite": suite, "axis": axis, "n": len(group), "expected": expected, "successes": int(group.success.sum()), "rate": group.success.mean(), "low": low, "high": high}
+            row = {
+                "suite": suite,
+                "axis": axis,
+                "n": len(group),
+                "expected": expected,
+                "successes": int(group.success.sum()),
+                "rate": group.success.mean(),
+                "low": low,
+                "high": high,
+            }
             if axis != "clean":
                 row |= paired_drop(data, axis, resamples)
                 row["success_drop"] = bool(row["drop_low"] > 0)
@@ -195,7 +246,12 @@ def main() -> None:
     parser.add_argument("--device", choices=["cpu", "cuda"], default="cpu")
     parser.add_argument("--workers", type=int, default=3)
     parser.add_argument("--threads", type=int, default=3)
-    parser.add_argument("--episode-limit", type=float, default=900.0, help="Seconds before an episode is killed and retried.")
+    parser.add_argument(
+        "--episode-limit",
+        type=float,
+        default=900.0,
+        help="Seconds before an episode is killed and retried.",
+    )
     parser.add_argument("--retries", type=int, default=2)
     parser.add_argument("--tasks", type=int, default=10)
     parser.add_argument("--episodes", type=int, default=2)
@@ -205,7 +261,15 @@ def main() -> None:
     parser.add_argument("--analyze-only", action="store_true")
     args = parser.parse_args()
 
-    config = {"tasks": args.tasks, "episodes": args.episodes, "action_steps": args.action_steps, "conditions": CONDITIONS, "max_steps": MAX_STEPS, "env_seed": ENV_SEED, "noise_seed": NOISE_SEED}
+    config = {
+        "tasks": args.tasks,
+        "episodes": args.episodes,
+        "action_steps": args.action_steps,
+        "conditions": CONDITIONS,
+        "max_steps": MAX_STEPS,
+        "env_seed": ENV_SEED,
+        "noise_seed": NOISE_SEED,
+    }
     tag = hashlib.sha256(json.dumps(config, sort_keys=True).encode()).hexdigest()[:10]
     output = args.results_dir / "stage2b" / tag
     output.mkdir(parents=True, exist_ok=True)
@@ -221,11 +285,31 @@ def main() -> None:
                     for axis, m in conditions:
                         path = output / f"{suite}_task{task}_ep{episode}_{axis}_{m}.json"
                         if not path.exists():
-                            jobs.append((suite, task, episode, axis, m, args.action_steps, path, args.threads, args.device))
-        print(f"tag {tag}: {len(jobs)} episodes to run, estimated {len(jobs) * SECONDS_PER_EPISODE / 3600:.1f} h", flush=True)
+                            jobs.append(
+                                (
+                                    suite,
+                                    task,
+                                    episode,
+                                    axis,
+                                    m,
+                                    args.action_steps,
+                                    path,
+                                    args.threads,
+                                    args.device,
+                                )
+                            )
+        print(
+            f"tag {tag}: {len(jobs)} episodes to run, estimated {len(jobs) * SECONDS_PER_EPISODE / 3600:.1f} h",
+            flush=True,
+        )
         start = time.perf_counter()
-        failed = run_jobs(run_condition, jobs, lambda job: job[6], args.workers, args.episode_limit, args.retries)
-        print(f"episodes took {(time.perf_counter() - start) / 3600:.2f} h; {len(failed)} never finished", flush=True)
+        failed = run_jobs(
+            run_condition, jobs, lambda job: job[6], args.workers, args.episode_limit, args.retries
+        )
+        print(
+            f"episodes took {(time.perf_counter() - start) / 3600:.2f} h; {len(failed)} never finished",
+            flush=True,
+        )
     analyze(output, args.results_dir, tag, conditions, expected, args.resamples)
 
 
